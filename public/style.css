@@ -1,18 +1,24 @@
 /* Import Google font - Poppins */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   font-family: "Poppins", sans-serif;
 }
+
 body {
   background: #E3F2FD;
 }
+
 .chatbot-toggler {
   position: fixed;
   bottom: 30px;
   right: 35px;
+}
+
+.chatbot-toggler button {
   outline: none;
   border: none;
   height: 50px;
@@ -25,20 +31,60 @@ body {
   background: #724ae8;
   transition: all 0.2s ease;
 }
-body.show-chatbot .chatbot-toggler {
+
+body.show-chatbot .chatbot-toggler button {
   transform: rotate(90deg);
 }
+
 .chatbot-toggler span {
   color: #fff;
   position: absolute;
 }
+
 .chatbot-toggler span:last-child,
-body.show-chatbot .chatbot-toggler span:first-child  {
+body.show-chatbot .chatbot-toggler span:first-child {
   opacity: 0;
 }
+
 body.show-chatbot .chatbot-toggler span:last-child {
   opacity: 1;
 }
+
+.chatbot-toggler .tooltip {
+  position: absolute;
+  top: 50%;
+  right: 70px;
+  width: 250px;
+  opacity: 0;
+  pointer-events: none;
+  padding: 10px 12px;
+  background: #fff;
+  border-radius: 5px;
+  transform: translateY(-53%);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.chatbot-toggler .tooltip.show {
+  transition: 0.1s 2s ease;
+}
+
+body:not(.show-chatbot) .chatbot-toggler button:hover ~ .tooltip,
+.chatbot-toggler .tooltip.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.chatbot-toggler .tooltip::after {
+  content: "";
+  position: absolute;
+  right: -7px;
+  top: 50%;
+  width: 15px;
+  height: 15px;
+  background: inherit;
+  transform: translateY(-50%) rotate(45deg);
+}
+
 .chatbot {
   position: fixed;
   right: 35px;
@@ -51,24 +97,27 @@ body.show-chatbot .chatbot-toggler span:last-child {
   pointer-events: none;
   transform: scale(0.5);
   transform-origin: bottom right;
-  box-shadow: 0 0 128px 0 rgba(0,0,0,0.1),
-              0 32px 64px -48px rgba(0,0,0,0.5);
+  box-shadow: 0 0 128px 0 rgba(0, 0, 0, 0.1),
+    0 32px 64px -48px rgba(0, 0, 0, 0.5);
   transition: all 0.1s ease;
 }
+
 body.show-chatbot .chatbot {
   opacity: 1;
   pointer-events: auto;
   transform: scale(1);
 }
+
 .chatbot header {
   padding: 16px 0;
   position: relative;
   text-align: center;
   color: #fff;
   background: #724ae8;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
-.chatbot header span {
+
+.chatbot header #close-btn {
   position: absolute;
   right: 15px;
   top: 50%;
@@ -76,33 +125,41 @@ body.show-chatbot .chatbot {
   cursor: pointer;
   transform: translateY(-50%);
 }
+
 header h2 {
   font-size: 1.4rem;
 }
+
 .chatbot .chatbox {
   overflow-y: auto;
   height: 510px;
-  padding: 30px 20px 100px;
+  padding: 30px 20px 120px;
 }
+
 .chatbot :where(.chatbox, textarea)::-webkit-scrollbar {
   width: 6px;
 }
+
 .chatbot :where(.chatbox, textarea)::-webkit-scrollbar-track {
   background: #fff;
   border-radius: 25px;
 }
+
 .chatbot :where(.chatbox, textarea)::-webkit-scrollbar-thumb {
   background: #ccc;
   border-radius: 25px;
 }
+
 .chatbox .chat {
   display: flex;
   list-style: none;
 }
+
 .chatbox .outgoing {
   margin: 20px 0;
   justify-content: flex-end;
 }
+
 .chatbox .incoming span {
   width: 32px;
   height: 32px;
@@ -113,10 +170,12 @@ header h2 {
   align-self: flex-end;
   background: #724ae8;
   border-radius: 4px;
-  margin: 0 10px 7px 0;
+  margin: 0 10px 2px 0;
 }
+
 .chatbox .chat p {
   white-space: pre-wrap;
+  word-wrap: break-word;
   padding: 12px 16px;
   border-radius: 10px 10px 0 10px;
   max-width: 75%;
@@ -124,18 +183,90 @@ header h2 {
   font-size: 0.95rem;
   background: #724ae8;
 }
+
 .chatbox .incoming p {
   border-radius: 10px 10px 10px 0;
 }
+
 .chatbox .chat p.error {
   color: #721c24;
   word-break: break-word;
   background: #f8d7da;
 }
+
 .chatbox .incoming p {
   color: #000;
   background: #f2f2f2;
 }
+
+.chatbox .incoming p a {
+  color: #724ae8;
+}
+
+.chatbox .typing-animation {
+  padding: 15px 11px;
+  display: flex;
+  gap: 5px;
+  background: #f1f1f1;
+  border-radius: 10px 10px 10px 0;
+}
+
+.chatbox .typing-animation .dot {
+  height: 6px;
+  width: 6px;
+  border-radius: 50%;
+  opacity: 0.7;
+  background: #6c757d;
+  animation: animateDots 1.5s var(--delay) ease-in-out infinite;
+}
+
+@keyframes animateDots {
+  0%,
+  44% {
+    transform: translateY(0px);
+  }
+
+  28% {
+    opacity: 0.4;
+    transform: translateY(-5px);
+  }
+
+  44% {
+    opacity: 0.2;
+  }
+}
+
+.chatbox .chat-suggestions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin: 30px 0;
+}
+
+.chat-suggestions .suggestions {
+  max-width: 75%;
+  display: flex;
+  justify-content: end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.chat-suggestions button {
+  border: none;
+  outline: none;
+  color: #000;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  padding: 10px 13px;
+  cursor: pointer;
+  background: #f2f2f2;
+}
+
+.chat-suggestions button:hover {
+  color: #fff;
+  background: #724ae8;
+}
+
 .chatbot .chat-input {
   display: flex;
   gap: 5px;
@@ -146,6 +277,7 @@ header h2 {
   padding: 3px 20px;
   border-top: 1px solid #ddd;
 }
+
 .chat-input textarea {
   height: 55px;
   width: 100%;
@@ -156,6 +288,7 @@ header h2 {
   padding: 15px 15px 15px 0;
   font-size: 0.95rem;
 }
+
 .chat-input span {
   align-self: flex-end;
   color: #724ae8;
@@ -166,7 +299,17 @@ header h2 {
   visibility: hidden;
   font-size: 1.35rem;
 }
-.chat-input textarea:valid ~ span {
+
+.chat-input #delete-chat-btn {
+  visibility: visible;
+  margin-left: 5px;
+}
+
+.chat-input #delete-chat-btn:hover {
+  color: #ff0000;
+}
+
+.chat-input textarea:valid~span {
   visibility: visible;
 }
 
@@ -175,6 +318,7 @@ header h2 {
     right: 20px;
     bottom: 20px;
   }
+
   .chatbot {
     right: 0;
     bottom: 0;
@@ -182,13 +326,16 @@ header h2 {
     border-radius: 0;
     width: 100%;
   }
+
   .chatbot .chatbox {
     height: 90%;
     padding: 25px 15px 100px;
   }
+
   .chatbot .chat-input {
     padding: 5px 15px;
   }
+
   .chatbot header span {
     display: block;
   }

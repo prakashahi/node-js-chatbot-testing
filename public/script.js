@@ -1,84 +1,150 @@
 // DOM element references
-const chatbotToggler = document.querySelector(".chatbot-toggler");
-const closeBtn = document.querySelector(".close-btn");
-const chatbox = document.querySelector(".chatbox");
+const chatbotToggler = document.querySelector(".chatbot-toggler button");
+const chabotTooltip = document.querySelector(".chatbot-toggler .tooltip");
+const chatbotCloseBtn = document.querySelector(".chatbot #close-btn");
+const chatbox = document.querySelector(".chatbox .dynamic-chats");
 const chatInput = document.querySelector(".chat-input textarea");
-const sendChatBtn = document.querySelector(".chat-input span");
-
-let userMessage = null;
+const sendChatBtn = document.querySelector(".chat-input #send-chat-btn");
+const deleteChatBtn = document.querySelector(".chat-input #delete-chat-btn");
+const chatSuggestionsDiv = document.querySelector(".chat-suggestions")
+const chatSuggestionButtons = chatSuggestionsDiv.querySelectorAll("button");
 const inputInitHeight = chatInput.scrollHeight;
 
-// Create a chat list item with the given message and class name
-const createChatLi = (message, className) => {
+const savedChats = localStorage.getItem("chatbot-conversations");
+
+// Initialize chat ringtone
+const chatRingtone = new Audio("./chat-ringtone.mp3");
+chatRingtone.volume = 0.5;
+
+let userMessage = null;
+
+// Restore saved chats and initial UI states
+if (savedChats) {
+    chatbox.innerHTML = savedChats;
+    document.querySelector(".chatbox").scrollTo(0, chatbox.scrollHeight);
+    chatSuggestionsDiv.style.display = "none";
+}
+
+// Create a chat list item with given content and class
+const createChatLi = (content, className) => {
     const chatLi = document.createElement("li");
-    chatLi.classList.add("chat", `${className}`);
-    let chatContent = className === "outgoing" ? `<p></p>` : `<span class="material-symbols-outlined">smart_toy</span><p></p>`;
-    chatLi.innerHTML = chatContent;
-    chatLi.querySelector("p").textContent = message;
+    chatLi.classList.add("chat", className);
+    chatLi.innerHTML = content;
     return chatLi;
 }
 
-// Generate a response from the server for the given user message
-const generateResponse = async (chatElement, userMessage) => {
-    const messageElement = chatElement.querySelector("p");
-    
+// Display incoming chat message
+const displayIncomingChat = (incomingChatLi, text) => {
+    const linkRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+    if (linkRegex.test(text)) {
+        const parser = new DOMParser();
+        const textWithAnchors = text.replace(linkRegex, '<a href="$&" target="_blank">$&</a>');
+        const parsedContent = parser.parseFromString(`<p>${textWithAnchors}</p>`, 'text/html');
+        incomingChatLi.innerHTML = parsedContent.body.firstChild.innerHTML;
+    } else {
+        incomingChatLi.textContent = text;
+    }
+    chatRingtone.play();
+}
+
+// Generate response from the server
+const generateResponse = async (incomingChatLi) => {
+    const messageElement = document.createElement("p");
     try {
-        // Make an API request to the chat endpoint
         const response = await fetch("/api/chat", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ userMessage })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userMessage }),
         });
 
         const { message } = await response.json();
         if (!response.ok) throw new Error(message);
-        messageElement.textContent = message;
+        displayIncomingChat(messageElement, message);
     } catch (error) {
-        // Display error message in the chat
         messageElement.classList.add("error");
         messageElement.textContent = error.message;
     }
-    chatbox.scrollTo(0, chatbox.scrollHeight);
+
+    incomingChatLi.querySelector(".typing-animation").remove();
+    incomingChatLi.appendChild(messageElement);
+    document.querySelector(".chatbox").scrollTo(0, chatbox.scrollHeight);
+    localStorage.setItem("chatbot-conversations", chatbox.innerHTML);
+}
+
+// Show typing animation during response generation
+const showTypingAnimation = () => {
+    const html = `<span class="material-symbols-outlined">smart_toy</span>
+                    <div class="typing-animation">
+                        <div class="dot" style="--delay: 0.2s"></div>
+                        <div class="dot" style="--delay: 0.3s"></div>
+                        <div class="dot" style="--delay: 0.4s"></div>
+                    </div>`;
+    const incomingChatLi = createChatLi(html, "incoming");
+    chatbox.appendChild(incomingChatLi);
+    document.querySelector(".chatbox").scrollTo(0, chatbox.scrollHeight);
+    generateResponse(incomingChatLi);
 }
 
 // Handle user's chat input
-const handleChat = () => {
-    userMessage = chatInput.value.trim();
-    if(!userMessage) return;
+const handleChat = (buttonMessage, buttonText) => {
+    userMessage = chatInput.value.trim() || buttonMessage;
+    if (!userMessage) return;
 
     chatInput.value = "";
+    chatRingtone.play();
     chatInput.style.height = `${inputInitHeight}px`;
+    if(chatSuggestionsDiv) chatSuggestionsDiv.style.display = "none";
 
-    // Append user's message to the chatbox
-    chatbox.appendChild(createChatLi(userMessage, "outgoing"));
-    chatbox.scrollTo(0, chatbox.scrollHeight);
-    
-    // Show "Thinking..." message and generate response
-    setTimeout(() => {
-        const incomingChatLi = createChatLi("Thinking...", "incoming");
-        chatbox.appendChild(incomingChatLi);
-        chatbox.scrollTo(0, chatbox.scrollHeight);
-        generateResponse(incomingChatLi, userMessage);
-    }, 600);
+    const outgoingChatLi = createChatLi(`<p></p>`, "outgoing");
+    outgoingChatLi.querySelector("p").textContent = buttonText || userMessage;
+    chatbox.appendChild(outgoingChatLi);
+    document.querySelector(".chatbox").scrollTo(0, chatbox.scrollHeight);
+    setTimeout(showTypingAnimation, 500);
 }
 
-// Event listeners for input and button interactions
+// Handle suggestion button click
+const handleSuggestionChat = (suggestionBtn) => {
+    const buttonText = suggestionBtn.innerText;
+    const buttonMessage = suggestionBtn.dataset.message;
+    handleChat(buttonMessage, buttonText);
+}
+
+// Delete all chat messages
+const deleteAllChats = () => {
+    if (confirm("Are you sure you want to delete all chats?")) {
+        localStorage.removeItem("chatbot-conversations");
+        if(chatSuggestionsDiv) chatSuggestionsDiv.style.display = "flex";
+        chatbox.querySelectorAll(".chat").forEach(li => li.remove());
+    }
+}
+
+// Suggestion button clicks
+chatSuggestionButtons.forEach(suggestionBtn => {
+    suggestionBtn.addEventListener("click", (e) => handleSuggestionChat(e.target));
+});
+
+// Auto-adjust chat input height
 chatInput.addEventListener("input", () => {
     chatInput.style.height = `${inputInitHeight}px`;
     chatInput.style.height = `${chatInput.scrollHeight}px`;
 });
 
+// Send chat on Enter key press
 chatInput.addEventListener("keydown", (e) => {
-    // Handle Enter key press for sending chat (if conditions met)
     if(e.key === "Enter" && !e.shiftKey && window.innerWidth > 800) {
         e.preventDefault();
         handleChat();
     }
 });
 
-// Event listeners for chatbot UI interactions
+// Toggle chatbot visibility
+chatbotToggler.addEventListener("click", () => {
+    chabotTooltip.classList.remove("show");
+    document.body.classList.toggle("show-chatbot");
+});
+
+// Add event listeners
 sendChatBtn.addEventListener("click", handleChat);
-closeBtn.addEventListener("click", () => document.body.classList.remove("show-chatbot"));
-chatbotToggler.addEventListener("click", () => document.body.classList.toggle("show-chatbot"));
+deleteChatBtn.addEventListener("click", deleteAllChats);
+chatbotCloseBtn.addEventListener("click", () => document.body.classList.remove("show-chatbot"));
+window.addEventListener("load", () => chabotTooltip.classList.add("show"));

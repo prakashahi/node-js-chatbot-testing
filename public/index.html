@@ -11,24 +11,41 @@
     <script src="script.js" defer></script>
   </head>
   <body>
-    <button class="chatbot-toggler">
-      <span class="material-symbols-rounded">mode_comment</span>
-      <span class="material-symbols-outlined">close</span>
-    </button>
+    <!-- Chatbot toggler button and tooltip -->
+    <div class="chatbot-toggler">
+      <button>
+        <span class="material-symbols-rounded">mode_comment</span>
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <div class="tooltip">Hi there 👋 I'm here to help you.</div>
+    </div>
+
+    <!-- Chatbot popup -->
     <div class="chatbot">
       <header>
         <h2>Chatbot</h2>
-        <span class="close-btn material-symbols-outlined">close</span>
+        <span id="close-btn" class="material-symbols-outlined">close</span>
       </header>
-      <ul class="chatbox">
-        <li class="chat incoming">
+      <div class="chatbox">
+        <div class="chat incoming">
           <span class="material-symbols-outlined">smart_toy</span>
           <p>Hi there 👋<br>How can I help you today?</p>
-        </li>
-      </ul>
+        </div>
+        <ul class="dynamic-chats"></ul>
+        <div class="chat-suggestions">
+          <div class="suggestions">
+            <button data-message="Hello there">Hello there 👋</button>
+            <button data-message="Who founded Frank's Flavors?">Founder of Frank's</button>
+            <button data-message="What's on the menu at Frank's Flavors? Tell me in short.">Menu items</button>
+            <button data-message="What's the website URL of Frank's Flavors?">Website link</button>
+            <button data-message="What are Frank's Flavors social media links?">Social media links</button>
+          </div>
+        </div>
+      </div>
       <div class="chat-input">
         <textarea placeholder="Enter a message..." spellcheck="false" required></textarea>
-        <span id="send-btn" class="material-symbols-rounded">send</span>
+        <span id="send-chat-btn" class="material-symbols-rounded">send</span>
+        <span title="Delete all chats" id="delete-chat-btn" class="material-symbols-outlined">delete</span>
       </div>
     </div>
 

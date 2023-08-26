@@ -29,7 +29,6 @@ router.post("/api/chat", async (req, res) => {
         // Add user's message to chat history
         const { userMessage } = req.body;
         chatHistory.push({ role: "user", content: userMessage });
-
         // Request AI response
         const response = await openai.createChatCompletion({
             model: "gpt-3.5-turbo-16k",
